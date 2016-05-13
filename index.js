@@ -12,14 +12,26 @@ var TrolleyHelper = function() {
 TrolleyHelper.prototype = Object.create(AlexaSkill.prototype);
 TrolleyHelper.prototype.constructor = TrolleyHelper;
 
-var getData = function(url) {
+var getData = function(url, callback, response) {
   http.get(url, function(res) {
     var body = '';
     res.on('data', function(d) { body += d; });
-    res.on('end', function() { console.log(JSON.parse(body)); });
+    res.on('end', function() { callback(JSON.parse(body), response); });
   }).on('error', function() {
     console.log(e);
   });
+}
+
+var respondWithRoutes = function(routes, response) {
+    var speechOutput = "",
+        repromptOutput = "Would you like to know more?";
+
+    if (routes.length) {
+      speechOutput = "There are currently " + routes.length + " active routes.";
+    } else {
+      speechOutput = "There are no active trollies at this time. Would you like to know more?"
+    }
+    response.ask(speechOutput, repromptOutput);
 }
 
 var intentGoodbye = function() {
@@ -30,22 +42,12 @@ TrolleyHelper.prototype.eventHandlers.onLaunch = function(launchRequest, session
   var help_prompt = "Welcome to the Greenville Trolley Tracker! You can ask for 'Active Routes' to learn what's running today.";
   var reprompt = "Say 'Active Routes' for more info.";
 
-  response.ask(help_prompt, reprompt); 
+  response.ask(help_prompt, reprompt);
 }
 
 TrolleyHelper.prototype.intentHandlers = {
   "GetActiveRoutesIntent": function(intent, session, response) {
-    var speechOutput = "",
-        repromptOutput = "Would you like to know more?";
-
-    var activeRoutes = getData(ROUTES_URL);
-
-    if (activeRoutes.length) { 
-      speechOutput = "There are currently " + activeRoutes.length + " active routes.";
-    } else { 
-      speechOutput = "There are no active trollies at this time. Would you like to know more?"
-    } 
-    response.ask(speechOutput, repromptOutput);
+    getData(ROUTES_URL, respondWithRoutes, response);
   },
 
   "GetRouteInfoIntent": function(intent, session, response) {
