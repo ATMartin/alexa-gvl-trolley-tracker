@@ -1,0 +1,14 @@
+GetActiveRoutesIntent what routes are active
+GetActiveRoutesIntent which routes are active
+GetActiveRoutesIntent active routes
+GetActiveRoutesIntent current routes
+GetActiveRoutesIntent all active
+GetActiveRoutesIntent what routes are active right now
+GetActiveRoutesIntent which routes are active right now
+GetActiveRoutesIntent active routes right now
+GetActiveRoutesIntent routes right now
+GetActiveRoutesIntent routes today
+GetActiveRoutesIntent what are today's routes
+GetActiveRoutesIntent where does the trolley go today
+
+GetRouteInfoIntent tell me more about {one two three four five|identifier}
