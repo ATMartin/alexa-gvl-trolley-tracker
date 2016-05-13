@@ -38,7 +38,7 @@ TrolleyHelper.prototype.intentHandlers = {
     var speechOutput = "",
         repromptOutput = "Would you like to know more?";
 
-    activeRoutes = getData(ROUTES_URL);
+    var activeRoutes = getData(ROUTES_URL);
 
     if (activeRoutes.length) { 
       speechOutput = "There are currently " + activeRoutes.length + " active routes.";
