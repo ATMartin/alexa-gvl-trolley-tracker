@@ -51,7 +51,7 @@ TrolleyHelper.prototype.intentHandlers = {
   },
 
   "GetRouteInfoIntent": function(intent, session, response) {
-    var speechOutput = "You asked for info about the " + intent.slots.identifier + " route!",
+    var speechOutput = "You asked for info about the " + intent.slots.identifier.value + " route!",
         repromptOutput = "Would you like to know more?";
 
     response.ask(speechOutput, repromptOutput);
