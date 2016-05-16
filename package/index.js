@@ -1,27 +1,25 @@
-var http = require('http');
-var AlexaSkill = require('./AlexaSkill');
+// Dependencies
+var Got        = require('got'),
+    AlexaSkill = require('./AlexaSkill');
+
+// Utility Variables
 var APP_ID = undefined;
 
-var TROLLEYS_URL = "http://api.yeahthattrolley.com/api/v1/Trolleys/Running";
-var ACTIVE_ROUTES_URL = "http://api.yeahthattrolley.com/api/v1/Routes/Active";
-var ALL_ROUTES_URL = "http://api.yeahthattrolley.com/api/v1/Routes";
+// Remote Endpoints
+var URL_TROLLEYS      = "http://api.yeahthattrolley.com/api/v1/Trolleys/Running",
+    URL_ACTIVE_ROUTES = "http://api.yeahthattrolley.com/api/v1/Routes/Active",
+    URL_ALL_ROUTES    = "http://api.yeahthattrolley.com/api/v1/Routes";
 
+// Common Strings
+var PROMPT_MORE_INFO = "Would you like to know more?";
+
+// Utility Methods
 var TrolleyHelper = function() {
   AlexaSkill.call(this, APP_ID);
 }
 
 TrolleyHelper.prototype = Object.create(AlexaSkill.prototype);
 TrolleyHelper.prototype.constructor = TrolleyHelper;
-
-var getData = function(url, callback, response) {
-  http.get(url, function(res) {
-    var body = '';
-    res.on('data', function(d) { body += d; });
-    res.on('end', function() { callback(JSON.parse(body), response); });
-  }).on('error', function() {
-    console.log(e);
-  });
-}
 
 var sanitizeShortName = function(name) {
   return name
@@ -31,22 +29,23 @@ var sanitizeShortName = function(name) {
           .toLowerCase();
 }
 
-var respondWithRoutes = function(routes, response) {
-    var speechOutput = "",
-        repromptOutput = "Would you like to know more?";
-
-    if (routes.length) {
-      speechOutput = "There are currently " + routes.length + " active routes.";
+var buildRoutesList = function(routes) {
+  var routeList = "";
+  routes.forEach(function(route) {
+    if (routes.indexOf(route) == routes.length - 1) {
+      routeList += ", and " + route["LongName"];
     } else {
-      speechOutput = "There are no active trollies at this time. Would you like to know more?"
+      routeList += route["LongName"] + ", ";
     }
-    response.ask(speechOutput, repromptOutput);
+  });
+  return routeList;
 }
 
 var intentGoodbye = function() {
   response.tell("Goodbye!");
 }
 
+// Initializer & Default Landing
 TrolleyHelper.prototype.eventHandlers.onLaunch = function(launchRequest, session, response) {
   var help_prompt = "Welcome to the Greenville Trolley Tracker! You can ask for 'Active Routes' to learn what's running today.";
   var reprompt = "Say 'Active Routes' for more info.";
@@ -54,20 +53,34 @@ TrolleyHelper.prototype.eventHandlers.onLaunch = function(launchRequest, session
   response.ask(help_prompt, reprompt);
 }
 
+// Intents
 TrolleyHelper.prototype.intentHandlers = {
   "GetActiveRoutesIntent": function(intent, session, response) {
-    getData(ACTIVE_ROUTES_URL, respondWithRoutes, response);
+    var speechOutput = "";
+
+    Got(URL_ACTIVE_ROUTES)
+      .then(function(result) {
+        var routes = JSON.parse(result.body);
+
+        if (routes.length >= 1) {
+          var plural = routes.length > 1;
+          speechOutput = "There " + (plural ? "are" : "is") + " currently " + routes.length + " active route" + (plural ? "s" : "") + ": " + buildRoutesList(routes) + ".";
+          response.ask(speechOutput, PROMPT_MORE_INFO);
+        } else {
+          speechOutput = "There are no active trollies at this time.";
+          response.tell(speechOutput);
+        }
+      });
   },
 
   "GetRouteInfoIntent": function(intent, session, response) {
     var identifier = intent.slots.identifier.value.toLowerCase();
 
-    http.get(ALL_ROUTES_URL, function(res) {
-      var body = '';
-      res.on('data', function(d) { body += d; });
-      res.on('end', function() { 
-        var routes = JSON.parse(body),
+    Got(URL_ALL_ROUTES)
+      .then(function(result) {
+        var routes = JSON.parse(result.body),
             matched = false;
+
         for(var i = 0; i < routes.length; i++) {
           var cleanName = sanitizeShortName(routes[i]["LongName"]);
           if (cleanName == identifier) {
@@ -79,9 +92,6 @@ TrolleyHelper.prototype.intentHandlers = {
           response.ask("Sorry, we didn't find a match for that route.", "Would you like to know more?");
         }
       });
-    }).on('error', function() {
-      console.log(e);
-    });
   },
 
   "HelpIntent": function(intent, session, response) { intentGoodbye(); },
@@ -91,6 +101,7 @@ TrolleyHelper.prototype.intentHandlers = {
   "CancelIntent": function(intent, session, response) { intentGoodbye(); }
 }
 
+// Handle & setup
 exports.handler = function(event, context) {
   var skill = new TrolleyHelper();
   skill.execute(event, context);

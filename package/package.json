@@ -1,0 +1,23 @@
+{
+  "name": "lambda-greenville-trolley",
+  "version": "0.0.1",
+  "description": "\"An AWS Lambda package for querying the Greenville SC Trolley Tracker. Intended for use with Amazon's Alexa service.\"",
+  "main": "index.js",
+  "dependencies": {
+    "got": "^6.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ATMartin/lambda-trolley.git"
+  },
+  "author": "Alex Martin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ATMartin/lambda-trolley/issues"
+  },
+  "homepage": "https://github.com/ATMartin/lambda-trolley"
+}
