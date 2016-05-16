@@ -14,21 +14,6 @@ var URL_TROLLEYS      = "http://api.yeahthattrolley.com/api/v1/Trolleys/Running"
 var PROMPT_MORE_INFO = "Would you like to know more?";
 
 // Utility Methods
-var TrolleyHelper = function() {
-  AlexaSkill.call(this, APP_ID);
-}
-
-TrolleyHelper.prototype = Object.create(AlexaSkill.prototype);
-TrolleyHelper.prototype.constructor = TrolleyHelper;
-
-var sanitizeShortName = function(name) {
-  return name
-          .replace(/[\/+-]/g, '')
-          .replace(/\s{2,}/g, ' ')
-          .replace(/\sst(\s|\.|$)/gi, " street$1")
-          .toLowerCase();
-}
-
 var buildRoutesList = function(routes) {
   var routeList = "";
   routes.forEach(function(route) {
@@ -45,11 +30,26 @@ var intentGoodbye = function() {
   response.tell("Goodbye!");
 }
 
+var sanitizeShortName = function(name) {
+  return name
+          .replace(/[\/+-]/g, '')
+          .replace(/\s{2,}/g, ' ')
+          .replace(/\sst(\s|\.|$)/gi, " street$1")
+          .toLowerCase();
+}
+
+// App Setup
+var TrolleyHelper = function() {
+  AlexaSkill.call(this, APP_ID);
+}
+
+TrolleyHelper.prototype = Object.create(AlexaSkill.prototype);
+TrolleyHelper.prototype.constructor = TrolleyHelper;
+
 // Initializer & Default Landing
 TrolleyHelper.prototype.eventHandlers.onLaunch = function(launchRequest, session, response) {
-  var help_prompt = "Welcome to the Greenville Trolley Tracker! You can ask for 'Active Routes' to learn what's running today.";
-  var reprompt = "Say 'Active Routes' for more info.";
-
+  var help_prompt = "Welcome to the Greenville Trolley Tracker! You can ask for 'Active Routes' to learn what's running today, and then ask for more info about a particular route.";
+  var reprompt = "Say 'What routes are active?' for more info.";
   response.ask(help_prompt, reprompt);
 }
 
@@ -84,12 +84,12 @@ TrolleyHelper.prototype.intentHandlers = {
         for(var i = 0; i < routes.length; i++) {
           var cleanName = sanitizeShortName(routes[i]["LongName"]);
           if (cleanName == identifier) {
-            response.ask(routes[i]["Description"], "Derp");
+            response.ask(routes[i]["Description"], PROMPT_MORE_INFO);
             matched = true;
           }
         }
         if (!matched) {
-          response.ask("Sorry, we didn't find a match for that route.", "Would you like to know more?");
+          response.ask("Sorry, we didn't find a match for that route.", PROMPT_MORE_INFO);
         }
       });
   },
